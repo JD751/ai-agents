@@ -4,10 +4,26 @@ version = "0.1.0"
 description = "Bayer AI Agent"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+package-mode = false
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
+fastapi = "^0.135.1"
+uvicorn = {extras = ["standard"], version = "^0.41.0"}
+pydantic = "^2.12.5"
+pydantic-settings = "^2.13.1"
 
+
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.2"
+httpx = "^0.28.1"
+black = "^26.1.0"
+isort = "^8.0.1"
+mypy = "^1.19.1"
+pre-commit = "^4.5.1"
 
 [build-system]
 requires = ["poetry-core"]
