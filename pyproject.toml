@@ -20,6 +20,9 @@ pypdf = "^5"
 
 
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
 httpx = "^0.28.1"
