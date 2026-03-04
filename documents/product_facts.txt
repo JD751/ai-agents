@@ -1,0 +1,48 @@
+Document: Product Factsheet
+Brand: ExampleBrand
+SKU: EXB-VC-1000-20
+Region: AU/NZ (example)
+Version: 2.0
+Last Updated: 2026-02-02
+
+1. Product Name
+ExampleBrand Vitamin C 1000 mg Effervescent Tablets (20s)
+
+2. Indications (Label-aligned)
+- Vitamin C supplementation
+- Helps maintain immune system function
+- Supports collagen formation
+
+3. Active Ingredients (per tablet)
+- Ascorbic Acid (Vitamin C) 1000 mg
+
+4. Key Product Features
+- Effervescent format
+- Orange flavour
+- Gluten-free (example)
+- No artificial colours (example)
+
+5. Directions for Use
+Adults: Dissolve 1 tablet in a glass of water once daily.
+Do not exceed the recommended daily dose.
+
+6. Warnings / Precautions
+- Not suitable for children under 12 years unless advised by a healthcare professional
+- If symptoms persist, consult a healthcare professional
+- Contains sweeteners (example)
+- Store below 25°C
+
+7. Claimable Statements Library (pre-approved wording examples)
+Low-risk:
+- “Vitamin C supports immune system function.”
+- “Supports collagen formation.”
+
+High-risk (needs MLR approval + substantiation):
+- “Clinically proven...”
+- “Prevents colds/flu...”
+
+8. Target Consumer
+Adults looking for daily immune support, convenience format.
+
+9. Mandatory Disclaimer
+Always read the label and follow the directions for use.
