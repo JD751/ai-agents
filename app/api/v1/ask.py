@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends
-from app.api.deps import get_settings
-from app.config.settings import Settings
+
+from app.api.deps import get_rag_service
 from app.models.ask import AskRequest, AskResponse
+from app.services.rag_service import RAGService
 
 router = APIRouter()
 
+
 @router.post("/ask", response_model=AskResponse)
-def ask(payload: AskRequest, settings: Settings = Depends(get_settings)):
-    # Stub for Day 1. Real RAG comes Day 3.
-    return AskResponse(answer="stub", citations=[])
+def ask(payload: AskRequest, rag: RAGService = Depends(get_rag_service)):
+    result = rag.answer(payload.question)
+    return AskResponse(answer=result.answer, citations=result.citations)
