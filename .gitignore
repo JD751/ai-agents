@@ -22,7 +22,7 @@ scripts/*
 # Project docs
 project_plan.md
 PRD.md
-mcp.json
+.mcp.json
 
 # Python
 .venv/
