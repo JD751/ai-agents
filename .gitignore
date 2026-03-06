@@ -17,12 +17,12 @@ credentials*.json
 notebooks/
 notebooks/*
 scripts/*
+.mcp.json
 
 
 # Project docs
 project_plan.md
 PRD.md
-.mcp.json
 
 # Python
 .venv/

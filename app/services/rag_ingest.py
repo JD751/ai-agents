@@ -1,7 +1,7 @@
 import hashlib
 from pathlib import Path
 
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from pypdf import PdfReader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -41,9 +41,17 @@ def load_documents(
             continue
         try:
             if file.suffix in _TEXT_SUFFIXES:
-                loaded = TextLoader(str(file)).load()
+                text = file.read_text(encoding="utf-8", errors="ignore")
+                loaded = [Document(page_content=text, metadata={"source": str(file)})]
             elif file.suffix == ".pdf":
-                loaded = PyPDFLoader(str(file)).load()
+                reader = PdfReader(str(file))
+                loaded = [
+                    Document(
+                        page_content=page.extract_text() or "",
+                        metadata={"source": str(file), "page": i},
+                    )
+                    for i, page in enumerate(reader.pages)
+                ]
             else:
                 logger.debug("Skipping unsupported file", extra={"file": str(file)})
                 continue
