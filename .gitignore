@@ -12,10 +12,17 @@ credentials*.json
 # IDE / tooling
 .cursorignore
 .DS_Store
+.vscode/
+.vscode/*
+notebooks/
+notebooks/*
+scripts/*
+
 
 # Project docs
 project_plan.md
 PRD.md
+mcp.json
 
 # Python
 .venv/

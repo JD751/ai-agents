@@ -59,8 +59,47 @@ Build a production-ready AI agent API that:
 - Clear documentation  
 - Architecture diagram included  
 
+Ue context 7 mcp where appropriate
+
+Day 4 Implementation Plan
+The goal is to build a LangGraph agent that orchestrates between tools, replacing the stub services with real logic.
+
+1. Implement DraftService
+A service that takes a brief and generates compliant marketing copy using the RAG context. It retrieves relevant policy/product docs, then uses an LLM to draft content grounded in them.
+
+2. Implement ReviewService
+A service that takes marketing text, runs it against retrieved compliance policy docs, and returns is_compliant + specific notes about violations or approvals.
+
+3. Build a LangGraph Agent (app/agents/)
+The agent is the orchestrator. It exposes three tools:
+
+rag_tool — answers factual questions (wraps RAGService)
+draft_tool — generates marketing drafts (wraps DraftService)
+review_tool — reviews copy for compliance (wraps ReviewService)
+The LangGraph graph will have:
+
+A reasoning node (LLM decides which tool to call based on user intent)
+Tool nodes for each capability
+A loop back to the reasoning node after each tool call until the agent decides it's done
+4. Wire Agent into API
+The /draft and /review endpoints will call the agent (or their dedicated services directly). Optionally add a new /agent endpoint that accepts free-form queries and lets the agent decide what to do.
+
+5. Add Tests
+Basic tests for draft and review endpoints to confirm they return real content (not stubs).
+
+Architecture after Day 4:
 
 
+User Request
+    ↓
+FastAPI Endpoint
+    ↓
+LangGraph Agent  ←──── memory (in-memory for now)
+    ↓
+  Tool Selection
+  ├── rag_tool     → RAGService (Chroma + OpenAI)
+  ├── draft_tool   → DraftService (RAG-grounded generation)
+  └── review_tool  → ReviewService (policy compliance check)
 
 
 Here is a **tight 21 day execution plan** 

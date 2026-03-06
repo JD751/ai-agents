@@ -2,6 +2,8 @@
 
     "workbench.editor.enablePreview": false,
     "workbench.editor.enablePreviewFromQuickOpen": false,
-    "workbench.editor.closeOnFileDelete": true
+    "workbench.editor.closeOnFileDelete": true,
+    "python.defaultInterpreterPath" : "/home/agent_x/projects/bayer-ai/.venv/bin/python"
+
 }
 

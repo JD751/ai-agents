@@ -16,9 +16,13 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application startup", extra={"event": "startup"})
 
+    from app.agents.agent import BayerAgent
     from app.services.rag_service import RAGService
+    from app.services.draft_service import DraftService
+    from app.services.ingest_service import IngestService
+    from app.services.review_service import ReviewService
+
     app.state.rag_service = await RAGService.create(
-        documents_dir=settings.documents_dir,
         openai_api_key=settings.openai_api_key,
         embedding_model=settings.embedding_model,
         chat_model=settings.chat_model,
@@ -27,6 +31,39 @@ async def lifespan(app: FastAPI):
         settings=settings,
     )
     logger.info("RAG service initialised", extra={"event": "rag_ready"})
+
+    app.state.draft_service = await DraftService.create(
+        vector_store=app.state.rag_service.vector_store,
+        openai_api_key=settings.openai_api_key,
+        chat_model=settings.chat_model,
+        retrieval_k=settings.retrieval_k,
+        llm_temperature=settings.llm_temperature,
+    )
+    logger.info("Draft service initialised", extra={"event": "draft_ready"})
+
+    app.state.ingest_service = IngestService(
+        vector_store=app.state.rag_service.vector_store,
+        settings=settings,
+    )
+    logger.info("Ingest service initialised", extra={"event": "ingest_ready"})
+
+    app.state.review_service = await ReviewService.create(
+        vector_store=app.state.rag_service.vector_store,
+        openai_api_key=settings.openai_api_key,
+        chat_model=settings.chat_model,
+        retrieval_k=settings.retrieval_k,
+        llm_temperature=settings.llm_temperature,
+    )
+    logger.info("Review service initialised", extra={"event": "review_ready"})
+
+    app.state.agent = BayerAgent.create(
+        rag_service=app.state.rag_service,
+        draft_service=app.state.draft_service,
+        review_service=app.state.review_service,
+        openai_api_key=settings.openai_api_key,
+        chat_model=settings.chat_model,
+    )
+    logger.info("Bayer agent initialised", extra={"event": "agent_ready"})
 
     yield
 

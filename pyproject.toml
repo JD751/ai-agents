@@ -20,6 +20,7 @@ pypdf = "^5"
 faiss-cpu = "^1.9"
 chromadb = "^0.6"
 langchain-chroma = "^0.2"
+langgraph = ">=0.2,<1.0"
 
 
 
