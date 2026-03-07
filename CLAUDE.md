@@ -1,3 +1,8 @@
+
+Before each edit provide a simple, brief, yet comprehensive explanation of why you are doing that step
+
+
+
 # Product Name
 
 ## Consumer Health Content & Claims Assistant

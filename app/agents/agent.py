@@ -13,6 +13,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
 
+from app.core.retry import async_llm_retry
+
 from app.core.logging import get_logger
 from app.services.draft_service import DraftService
 from app.services.rag_service import RAGService
@@ -84,12 +86,18 @@ class BayerAgent:
         logger.info("Bayer LangGraph agent initialised")
         return cls(graph=graph, memory=memory)
 
-    async def run(self, query: str, thread_id: str = "default") -> AgentResult:
-        config = {"configurable": {"thread_id": thread_id}}
-        result = await self._graph.ainvoke(
-            {"messages": [HumanMessage(content=query)]},
-            config=config,
-        )
+    async def run(self, query: str, thread_id: str = "default", request_id: str = "unknown") -> AgentResult:
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "tags": ["bayer-agent"],
+            "metadata": {"thread_id": thread_id, "request_id": request_id},
+        }
+        async for attempt in async_llm_retry():
+            with attempt:
+                result = await self._graph.ainvoke(
+                    {"messages": [HumanMessage(content=query)]},
+                    config=config,
+                )
 
         messages = result["messages"]
         final_answer = messages[-1].content

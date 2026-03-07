@@ -16,8 +16,10 @@ credentials*.json
 .vscode/*
 notebooks/
 notebooks/*
-scripts/*
+scripts/
 .mcp.json
+.claude
+CLAUDE.md
 
 
 # Project docs

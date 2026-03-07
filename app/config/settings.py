@@ -15,5 +15,22 @@ class Settings(BaseSettings):
     chunk_overlap: int = 50
     chroma_persist_dir: str = "chroma_db"
 
+    # Production hardening
+    request_timeout_seconds: float = 30.0
+    queue_max_size: int = 100
+    queue_workers: int = 2
+    rate_limit_default: str = "60/minute"
+    rate_limit_agent: str = "10/minute"
+    rate_limit_ask: str = "30/minute"
+    rate_limit_draft: str = "20/minute"
+    rate_limit_review: str = "20/minute"
+    rate_limit_ingest: str = "5/minute"
+
+    # LangSmith tracing
+    langchain_tracing_v2: bool = False
+    langchain_api_key: str = ""
+    langchain_project: str = "bayer-ai"
+    langsmith_endpoint: str = "https://eu.api.smith.langchain.com"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

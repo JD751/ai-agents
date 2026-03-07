@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from app.core.logging import get_logger
+from app.core.retry import llm_retry
 
 logger = get_logger(__name__)
 
@@ -51,9 +52,17 @@ class DraftService:
         logger.info("Draft service initialised")
         return DraftService(retriever=retriever, chain=chain)
 
-    def draft(self, brief: str) -> DraftResult:
+    def draft(self, brief: str, request_id: str = "unknown") -> DraftResult:
         docs = self._retriever.invoke(brief)
         context = "\n\n".join(doc.page_content for doc in docs)
         citations = list(dict.fromkeys(doc.metadata.get("source", "unknown") for doc in docs))
-        response = self._chain.invoke({"brief": brief, "context": context})
+
+        @llm_retry
+        def _invoke():
+            return self._chain.invoke(
+                {"brief": brief, "context": context},
+                config={"metadata": {"request_id": request_id}},
+            )
+
+        response = _invoke()
         return DraftResult(draft=response.content, citations=citations)

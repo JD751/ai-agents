@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from app.core.logging import get_logger
+from app.core.retry import llm_retry
 
 logger = get_logger(__name__)
 
@@ -54,10 +55,18 @@ class ReviewService:
         logger.info("Review service initialised")
         return ReviewService(retriever=retriever, chain=chain)
 
-    def review(self, text: str) -> ReviewResult:
+    def review(self, text: str, request_id: str = "unknown") -> ReviewResult:
         docs = self._retriever.invoke(text)
         context = "\n\n".join(doc.page_content for doc in docs)
-        response = self._chain.invoke({"text": text, "context": context})
+
+        @llm_retry
+        def _invoke():
+            return self._chain.invoke(
+                {"text": text, "context": context},
+                config={"metadata": {"request_id": request_id}},
+            )
+
+        response = _invoke()
         return _parse_response(response.content)
 
 

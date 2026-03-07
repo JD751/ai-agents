@@ -10,6 +10,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from app.config.settings import Settings
 from app.core.logging import get_logger
+from app.core.retry import llm_retry
 
 logger = get_logger(__name__)
 
@@ -76,12 +77,18 @@ class RAGService:
 
         return RAGService(retriever=retriever, chain=chain, vector_store=vector_store)
 
-    def answer(self, question: str) -> AskResult:
+    def answer(self, question: str, request_id: str = "unknown") -> AskResult:
         docs = self._retriever.invoke(question)
 
         context = "\n\n".join(doc.page_content for doc in docs)
         citations = [doc.metadata.get("source", "unknown") for doc in docs]
 
-        response = self._chain.invoke({"question": question, "context": context})
+        @llm_retry
+        def _invoke():
+            return self._chain.invoke(
+                {"question": question, "context": context},
+                config={"metadata": {"request_id": request_id}},
+            )
 
+        response = _invoke()
         return AskResult(answer=response.content, citations=list(dict.fromkeys(citations)))
