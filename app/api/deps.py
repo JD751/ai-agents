@@ -1,9 +1,12 @@
+from collections.abc import AsyncGenerator
 from functools import lru_cache
 
 from fastapi import Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.agent import BayerAgent
 from app.config.settings import Settings
+from app.db.base import get_session_factory
 from app.services.draft_service import DraftService
 from app.services.ingest_service import IngestService
 from app.services.rag_service import RAGService
@@ -34,3 +37,8 @@ def get_review_service(request: Request) -> ReviewService:
 
 def get_agent(request: Request) -> BayerAgent:
     return request.app.state.agent
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with get_session_factory()() as session:
+        yield session

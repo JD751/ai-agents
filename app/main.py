@@ -11,6 +11,8 @@ from app.api.deps import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import RequestIDMiddleware, TimeoutMiddleware, global_exception_handler
 from app.core.limiter import limiter
+from app.db.base import Base, get_engine, init_db
+from app.db import models  # noqa: F401 — registers ORM models with Base.metadata
 
 
 @asynccontextmanager
@@ -18,6 +20,11 @@ async def lifespan(app: FastAPI):
     configure_logging()
     logger = get_logger(__name__)
     settings = get_settings()
+
+    init_db(settings.database_url)
+    async with get_engine().begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database initialised", extra={"event": "db_ready"})
 
     if settings.langchain_tracing_v2:
         os.environ["LANGCHAIN_TRACING_V2"] = "true"

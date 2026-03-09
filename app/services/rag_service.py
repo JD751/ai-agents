@@ -4,7 +4,6 @@ from pathlib import Path
 
 import chromadb
 from langchain_chroma import Chroma
-from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
@@ -35,16 +34,25 @@ class AskResult:
     citations: list[str]
 
 
-def build_vector_store(persist_dir: str, embeddings: OpenAIEmbeddings) -> Chroma:
-    """Connect to (or create) the persistent Chroma collection. Never ingests documents."""
-    client = chromadb.PersistentClient(path=persist_dir)
-    vector_store = Chroma(
+def build_vector_store(settings: Settings, embeddings: OpenAIEmbeddings) -> Chroma:
+    """Connect to (or create) the persistent Chroma collection. Never ingests documents.
+
+    Uses HttpClient when CHROMA_HOST is configured (Docker / production).
+    Falls back to PersistentClient for local development outside Docker.
+    """
+    if settings.chroma_host:
+        client = chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
+        logger.info("Connected to Chroma via HTTP", extra={"host": settings.chroma_host, "port": settings.chroma_port})
+    else:
+        persist_dir = str(Path(settings.chroma_persist_dir).resolve())
+        client = chromadb.PersistentClient(path=persist_dir)
+        logger.info("Connected to Chroma via PersistentClient", extra={"persist_dir": persist_dir})
+
+    return Chroma(
         client=client,
         collection_name=_COLLECTION,
         embedding_function=embeddings,
     )
-    logger.info("Connected to vector store", extra={"persist_dir": persist_dir})
-    return vector_store
 
 
 class RAGService:
@@ -67,9 +75,8 @@ class RAGService:
             settings = Settings()
 
         embeddings = OpenAIEmbeddings(model=embedding_model, api_key=openai_api_key)
-        persist_dir = str(Path(settings.chroma_persist_dir).resolve())
 
-        vector_store = await asyncio.to_thread(build_vector_store, persist_dir, embeddings)
+        vector_store = await asyncio.to_thread(build_vector_store, settings, embeddings)
         retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_k})
 
         llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=llm_temperature)

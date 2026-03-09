@@ -1,0 +1,35 @@
+# Secrets — never bake into the image
+.env
+
+# Local vector DB state and Postgres data — mounted as volumes at runtime
+chroma_db/
+postgres_data/
+
+# Python cache — rebuilt inside the container
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environment — dependencies are installed fresh inside the image
+.venv/
+
+# Dev tooling and notebooks — not needed at runtime
+notebooks/
+.vscode/
+.claude/
+.git/
+.gitignore
+.pre-commit-config.yaml
+
+# Docs and planning files
+*.md
+CLAUDE.md
+PRD.md
+project_plan.md
+project_overview.md
+
+# Test files — not part of the production image
+tests/
+scripts/

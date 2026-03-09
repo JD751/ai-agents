@@ -219,7 +219,7 @@ Full local production-like environment.
 
 ---
 
-## Day 8 – CI Pipeline
+## Day 8 – CI/CD Pipeline
 
 Create GitHub Actions:
 
@@ -231,6 +231,17 @@ Deliverable:
 Working CI pipeline.
 
 ---
+## day 8.5
+
+Implement:
+
+* API key auth
+* Basic role protection
+* Secure secret handling
+* Input validation
+
+Deliverable:
+Production-safe API.
 
 ## Day 9 – Deploy to Azure
 
@@ -320,15 +331,7 @@ Observable AI service.
 
 ## Day 14 – Security
 
-Implement:
 
-* API key auth
-* Basic role protection
-* Secure secret handling
-* Input validation
-
-Deliverable:
-Production-safe API.
 
 ---
 

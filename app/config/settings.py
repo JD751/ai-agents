@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,8 @@ class Settings(BaseSettings):
     chunk_size: int = 500
     chunk_overlap: int = 50
     chroma_persist_dir: str = "chroma_db"
+    chroma_host: str = ""   # set to "chroma" in Docker; empty = use PersistentClient
+    chroma_port: int = 8000
 
     # Production hardening
     request_timeout_seconds: float = 30.0
@@ -26,11 +29,21 @@ class Settings(BaseSettings):
     rate_limit_review: str = "20/minute"
     rate_limit_ingest: str = "5/minute"
 
+    # PostgreSQL
+    database_url: str = "postgresql+asyncpg://bayeruser:bayerpass@localhost:5432/bayerai"
+
     # LangSmith tracing
     langchain_tracing_v2: bool = False
     langchain_api_key: str = ""
     langchain_project: str = "bayer-ai"
     langsmith_endpoint: str = "https://eu.api.smith.langchain.com"
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    @field_validator("langchain_tracing_v2", mode="before")
+    @classmethod
+    def strip_bool_whitespace(cls, v: object) -> object:
+        if isinstance(v, str):
+            return v.strip()
+        return v
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", str_strip_whitespace=True)
 
