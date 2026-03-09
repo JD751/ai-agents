@@ -16,4 +16,4 @@ async def run_agent(
     agent: BayerAgent = Depends(get_agent),
 ) -> AgentResponse:
     result = await agent.run(query=body.query, thread_id=body.thread_id, request_id=request.state.request_id)
-    return AgentResponse(answer=result.answer, tool_calls=result.tool_calls)
+    return AgentResponse(answer=result.answer, tool_calls=result.tool_calls, citations=result.citations)

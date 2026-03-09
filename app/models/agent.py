@@ -9,3 +9,4 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     answer: str
     tool_calls: list[str]
+    citations: list[str]

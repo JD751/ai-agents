@@ -13,9 +13,9 @@ fastapi = "^0.135.1"
 uvicorn = {extras = ["standard"], version = "^0.41.0"}
 pydantic = "^2.12.5"
 pydantic-settings = "^2.13.1"
-langchain = "^0.3"
-langchain-core = ">=0.3.72,<0.4"
-langchain-openai = "^0.3"
+langchain = "^1.2"
+langchain-core = "^1.2"
+langchain-openai = "^1.1"
 pypdf = "^5"
 faiss-cpu = "^1.9"
 chromadb = "^0.6"
@@ -25,6 +25,7 @@ langsmith = ">=0.3"
 slowapi = "^0.1.9"
 tenacity = "^9.1.4"
 sse-starlette = "^3.3.2"
+langchain-text-splitters = "^1.1.1"
 
 
 

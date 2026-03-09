@@ -1,0 +1,23 @@
+---
+title: Bayer AI Agent - LangGraph ReAct Loop
+---
+flowchart TD
+    START(["__start__"])
+    END(["__end__"])
+
+    agent["agent\n(ChatOpenAI reasoning node)"]
+
+    subgraph tools["tools (ToolNode)"]
+        rag_tool["rag_tool\nAnswer factual questions\nfrom knowledge base"]
+        draft_tool["draft_tool\nGenerate compliant\nmarketing copy"]
+        review_tool["review_tool\nCheck marketing text\nfor compliance"]
+    end
+
+    memory[("InMemorySaver\ncheckpointer\n(thread_id keyed)")]
+
+    START --> agent
+    agent -->|"tool_calls present"| tools
+    agent -->|"no tool_calls"| END
+    tools --> agent
+
+    agent <-.->|"read / write state"| memory

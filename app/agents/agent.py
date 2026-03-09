@@ -8,10 +8,10 @@ Graph structure:
 """
 from dataclasses import dataclass
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from app.core.retry import async_llm_retry
 
@@ -37,6 +37,7 @@ _SYSTEM_PROMPT = (
 class AgentResult:
     answer: str
     tool_calls: list[str]
+    citations: list[str]
 
 
 class BayerAgent:
@@ -76,10 +77,10 @@ class BayerAgent:
         llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=0)
         memory = InMemorySaver()
 
-        graph = create_react_agent(
-            model=llm,
+        graph = create_agent(
+            llm,
             tools=tools,
-            prompt=_SYSTEM_PROMPT,
+            system_prompt=_SYSTEM_PROMPT,
             checkpointer=memory,
         )
 
@@ -108,5 +109,15 @@ class BayerAgent:
             if hasattr(msg, "name") and msg.name is not None
         ]
 
+        citations: list[str] = []
+        for msg in messages:
+            if isinstance(msg, ToolMessage) and isinstance(msg.content, str):
+                for line in msg.content.splitlines():
+                    if line.startswith("Sources:"):
+                        sources = line.removeprefix("Sources:").strip()
+                        if sources and sources != "none":
+                            citations.extend(s.strip() for s in sources.split(",") if s.strip())
+        citations = list(dict.fromkeys(citations))  # deduplicate, preserve order
+
         logger.info("Agent run complete", extra={"thread_id": thread_id, "tools_used": tool_calls})
-        return AgentResult(answer=final_answer, tool_calls=tool_calls)
+        return AgentResult(answer=final_answer, tool_calls=tool_calls, citations=citations)
