@@ -6,6 +6,7 @@ Graph structure:
                 ↑                |
                 └────────────────┘
 """
+
 from dataclasses import dataclass
 
 from langchain_core.messages import HumanMessage, ToolMessage
@@ -71,7 +72,8 @@ class BayerAgent:
             result = review_service.review(marketing_text)
             verdict = "COMPLIANT" if result.is_compliant else "NON-COMPLIANT"
             notes = "\n".join(f"- {n}" for n in result.notes)
-            return f"VERDICT: {verdict}\nNOTES:\n{notes}"
+            citations = ", ".join(result.citations) if result.citations else "none"
+            return f"VERDICT: {verdict}\nNOTES:\n{notes}\n\nSources: {citations}"
 
         tools = [rag_tool, draft_tool, review_tool]
         llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=0)
@@ -87,7 +89,9 @@ class BayerAgent:
         logger.info("Bayer LangGraph agent initialised")
         return cls(graph=graph, memory=memory)
 
-    async def run(self, query: str, thread_id: str = "default", request_id: str = "unknown") -> AgentResult:
+    async def run(
+        self, query: str, thread_id: str = "default", request_id: str = "unknown"
+    ) -> AgentResult:
         config = {
             "configurable": {"thread_id": thread_id},
             "tags": ["bayer-agent"],
@@ -116,8 +120,15 @@ class BayerAgent:
                     if line.startswith("Sources:"):
                         sources = line.removeprefix("Sources:").strip()
                         if sources and sources != "none":
-                            citations.extend(s.strip() for s in sources.split(",") if s.strip())
+                            citations.extend(
+                                s.strip() for s in sources.split(",") if s.strip()
+                            )
         citations = list(dict.fromkeys(citations))  # deduplicate, preserve order
 
-        logger.info("Agent run complete", extra={"thread_id": thread_id, "tools_used": tool_calls})
-        return AgentResult(answer=final_answer, tool_calls=tool_calls, citations=citations)
+        logger.info(
+            "Agent run complete",
+            extra={"thread_id": thread_id, "tools_used": tool_calls},
+        )
+        return AgentResult(
+            answer=final_answer, tool_calls=tool_calls, citations=citations
+        )

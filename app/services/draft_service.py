@@ -1,29 +1,30 @@
-import asyncio
 from dataclasses import dataclass
 
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 
 from app.core.logging import get_logger
 from app.core.retry import llm_retry
 
 logger = get_logger(__name__)
 
-_PROMPT = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a marketing copywriter for Bayer consumer health products. "
-        "Using only the context provided, write compliant marketing copy based on the brief. "
-        "The copy must be factual, grounded in the context, and must not make unsupported claims.\n\n"
-        "Structure your response as:\n"
-        "Headline: <one line>\n"
-        "Body: <2-3 sentences>\n"
-        "CTA: <call to action>\n\n"
-        "Context:\n{context}",
-    ),
-    ("human", "Brief: {brief}"),
-])
+_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a marketing copywriter for Bayer consumer health products. "
+            "Using only the context provided, write compliant marketing copy based on the brief. "
+            "The copy must be factual, grounded in the context, and must not make unsupported claims.\n\n"
+            "Structure your response as:\n"
+            "Headline: <one line>\n"
+            "Body: <2-3 sentences>\n"
+            "CTA: <call to action>\n\n"
+            "Context:\n{context}",
+        ),
+        ("human", "Brief: {brief}"),
+    ]
+)
 
 
 @dataclass
@@ -47,7 +48,9 @@ class DraftService:
         llm_temperature: float,
     ) -> "DraftService":
         retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_k})
-        llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=llm_temperature)
+        llm = ChatOpenAI(
+            model=chat_model, api_key=openai_api_key, temperature=llm_temperature
+        )
         chain = _PROMPT | llm
         logger.info("Draft service initialised")
         return DraftService(retriever=retriever, chain=chain)
@@ -55,7 +58,9 @@ class DraftService:
     def draft(self, brief: str, request_id: str = "unknown") -> DraftResult:
         docs = self._retriever.invoke(brief)
         context = "\n\n".join(doc.page_content for doc in docs)
-        citations = list(dict.fromkeys(doc.metadata.get("source", "unknown") for doc in docs))
+        citations = list(
+            dict.fromkeys(doc.metadata.get("source", "unknown") for doc in docs)
+        )
 
         @llm_retry
         def _invoke():

@@ -231,32 +231,32 @@ Deliverable:
 Working CI pipeline.
 
 ---
-## day 8.5
 
-Implement:
 
-* API key auth
-* Basic role protection
-* Secure secret handling
-* Input validation
 
-Deliverable:
-Production-safe API.
 
 ## Day 9 – Deploy to Azure
 
 Deploy container to:
 
-* Azure Kubernetes Service
+* Azure Container Apps (not AKS — right-sized for this project, no K8s expertise required)
+
+Infrastructure:
+
+* Azure Container Registry (ACR) — store and version Docker images
+* Azure Container Apps Environment — shared networking for app + chromadb containers
+* Azure Database for PostgreSQL (managed service, not a container)
+* Azure Key Vault — store secrets (OPENAI_API_KEY, DATABASE_URL, etc.)
 
 Configure:
 
-* Environment variables
-* Secrets
-* Scaling rules
+* GitHub Actions CD job: push image to ACR, trigger Container Apps redeploy
+* Environment variables via Container Apps settings (non-sensitive) and Key Vault references (sensitive)
+* Min/max replica scaling rules based on HTTP load
+* Managed identity for Container Apps → Key Vault access (no hardcoded credentials)
 
 Deliverable:
-Public working endpoint.
+Public working endpoint on Azure Container Apps.
 
 ---
 
@@ -308,7 +308,7 @@ Study:
 
 Understand how:
 
-* Azure Kubernetes Service works conceptually.
+* Azure Container Apps autoscaling works (KEDA-based, HTTP concurrency triggers).
 
 Deliverable:
 Architecture diagram for scaled AI API.
@@ -331,7 +331,15 @@ Observable AI service.
 
 ## Day 14 – Security
 
+Implement:
 
+* API key auth
+* Basic role protection
+* Secure secret handling
+* Input validation
+
+Deliverable:
+Production-safe API.
 
 ---
 

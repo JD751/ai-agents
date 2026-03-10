@@ -23,19 +23,23 @@ async def ask(
     db: AsyncSession = Depends(get_db),
 ):
     start = time.monotonic()
-    result = await asyncio.to_thread(rag.answer, payload.question, request.state.request_id)
+    result = await asyncio.to_thread(
+        rag.answer, payload.question, request.state.request_id
+    )
     latency_ms = (time.monotonic() - start) * 1000
 
     validate_ask_response(result.answer)
 
-    db.add(QueryLog(
-        request_id=request.state.request_id,
-        endpoint="/ask",
-        input_text=payload.question,
-        response_text=result.answer,
-        citation_count=len(result.citations),
-        latency_ms=round(latency_ms, 2),
-    ))
+    db.add(
+        QueryLog(
+            request_id=request.state.request_id,
+            endpoint="/ask",
+            input_text=payload.question,
+            response_text=result.answer,
+            citation_count=len(result.citations),
+            latency_ms=round(latency_ms, 2),
+        )
+    )
     await db.commit()
 
     return AskResponse(answer=result.answer, citations=result.citations)

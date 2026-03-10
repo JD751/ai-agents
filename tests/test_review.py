@@ -1,14 +1,15 @@
-from unittest.mock import MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_review_service
+from app.api.deps import get_db, get_review_service
 from app.main import app
 from app.services.review_service import ReviewResult, _parse_response
 
 
 # --- Unit tests for _parse_response (no mocking needed) ---
+
 
 def test_parse_response_compliant():
     content = (
@@ -44,6 +45,7 @@ def test_parse_response_falls_back_to_raw_content_when_no_notes():
 
 # --- Endpoint tests ---
 
+
 @pytest.fixture
 def client():
     mock_service = MagicMock()
@@ -51,7 +53,13 @@ def client():
         is_compliant=True,
         notes=["Claim is supported by the product monograph."],
     )
+
+    mock_db = MagicMock()
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+
     app.dependency_overrides[get_review_service] = lambda: mock_service
+    app.dependency_overrides[get_db] = lambda: mock_db
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -75,7 +83,9 @@ def test_review_non_compliant_response(client):
         is_compliant=False,
         notes=["Unsupported claim detected."],
     )
-    resp = client.post("/api/v1/review", json={"text": "This product cures everything."})
+    resp = client.post(
+        "/api/v1/review", json={"text": "This product cures everything."}
+    )
     data = resp.json()
     assert data["is_compliant"] is False
     assert data["notes"] == ["Unsupported claim detected."]
@@ -85,4 +95,4 @@ def test_review_calls_service_with_text(client):
     text = "Aspirin is safe for daily use."
     client.post("/api/v1/review", json={"text": text})
     mock_service = app.dependency_overrides[get_review_service]()
-    mock_service.review.assert_called_once_with(text)
+    mock_service.review.assert_called_once_with(text, request_id=ANY)

@@ -9,7 +9,11 @@ from app.api.v1.router import router as v1_router
 from app.api.root import router as root_router
 from app.api.deps import get_settings
 from app.core.logging import configure_logging, get_logger
-from app.core.middleware import RequestIDMiddleware, TimeoutMiddleware, global_exception_handler
+from app.core.middleware import (
+    RequestIDMiddleware,
+    TimeoutMiddleware,
+    global_exception_handler,
+)
 from app.core.limiter import limiter
 from app.db.base import Base, get_engine, init_db
 from app.db import models  # noqa: F401 — registers ORM models with Base.metadata
@@ -31,7 +35,9 @@ async def lifespan(app: FastAPI):
         os.environ["LANGCHAIN_API_KEY"] = settings.langchain_api_key
         os.environ["LANGCHAIN_PROJECT"] = settings.langchain_project
         os.environ["LANGSMITH_ENDPOINT"] = settings.langsmith_endpoint
-        logger.info("LangSmith tracing enabled", extra={"project": settings.langchain_project})
+        logger.info(
+            "LangSmith tracing enabled", extra={"project": settings.langchain_project}
+        )
 
     logger.info("Application startup", extra={"event": "startup"})
 

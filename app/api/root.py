@@ -14,4 +14,3 @@ def read_root() -> dict[str, str]:
         "status": "ok",
         "version": "v1",
     }
-

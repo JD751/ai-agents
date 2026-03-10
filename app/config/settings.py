@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     chunk_size: int = 500
     chunk_overlap: int = 50
     chroma_persist_dir: str = "chroma_db"
-    chroma_host: str = ""   # set to "chroma" in Docker; empty = use PersistentClient
+    chroma_host: str = ""  # set to "chroma" in Docker; empty = use PersistentClient
     chroma_port: int = 8000
 
     # Production hardening
@@ -30,7 +30,9 @@ class Settings(BaseSettings):
     rate_limit_ingest: str = "5/minute"
 
     # PostgreSQL
-    database_url: str = "postgresql+asyncpg://bayeruser:bayerpass@localhost:5432/bayerai"
+    database_url: str = (
+        "postgresql+asyncpg://bayeruser:bayerpass@localhost:5432/bayerai"
+    )
 
     # LangSmith tracing
     langchain_tracing_v2: bool = False
@@ -45,5 +47,6 @@ class Settings(BaseSettings):
             return v.strip()
         return v
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", str_strip_whitespace=True)
-
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", str_strip_whitespace=True
+    )

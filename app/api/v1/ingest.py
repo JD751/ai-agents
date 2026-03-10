@@ -10,6 +10,10 @@ router = APIRouter()
 
 @router.post("/ingest", response_model=IngestResponse)
 @limiter.limit(lambda: get_settings().rate_limit_ingest)
-async def ingest(request: Request, ingest_service: IngestService = Depends(get_ingest_service)):
+async def ingest(
+    request: Request, ingest_service: IngestService = Depends(get_ingest_service)
+):
     result = await ingest_service.ingest_async()
-    return IngestResponse(chunks_added=result.chunks_added, files_processed=result.files_processed)
+    return IngestResponse(
+        chunks_added=result.chunks_added, files_processed=result.files_processed
+    )

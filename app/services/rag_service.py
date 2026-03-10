@@ -15,17 +15,19 @@ logger = get_logger(__name__)
 
 _COLLECTION = "bayer-rag"
 
-_PROMPT = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a helpful assistant for Bayer consumer health. "
-        "Answer the question using only the context below. "
-        "Be concise and factual. "
-        "If the answer is not in the context, say you don't know.\n\n"
-        "Context:\n{context}",
-    ),
-    ("human", "{question}"),
-])
+_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant for Bayer consumer health. "
+            "Answer the question using only the context below. "
+            "Be concise and factual. "
+            "If the answer is not in the context, say you don't know.\n\n"
+            "Context:\n{context}",
+        ),
+        ("human", "{question}"),
+    ]
+)
 
 
 @dataclass
@@ -41,12 +43,20 @@ def build_vector_store(settings: Settings, embeddings: OpenAIEmbeddings) -> Chro
     Falls back to PersistentClient for local development outside Docker.
     """
     if settings.chroma_host:
-        client = chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
-        logger.info("Connected to Chroma via HTTP", extra={"host": settings.chroma_host, "port": settings.chroma_port})
+        client = chromadb.HttpClient(
+            host=settings.chroma_host, port=settings.chroma_port
+        )
+        logger.info(
+            "Connected to Chroma via HTTP",
+            extra={"host": settings.chroma_host, "port": settings.chroma_port},
+        )
     else:
         persist_dir = str(Path(settings.chroma_persist_dir).resolve())
         client = chromadb.PersistentClient(path=persist_dir)
-        logger.info("Connected to Chroma via PersistentClient", extra={"persist_dir": persist_dir})
+        logger.info(
+            "Connected to Chroma via PersistentClient",
+            extra={"persist_dir": persist_dir},
+        )
 
     return Chroma(
         client=client,
@@ -79,7 +89,9 @@ class RAGService:
         vector_store = await asyncio.to_thread(build_vector_store, settings, embeddings)
         retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_k})
 
-        llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=llm_temperature)
+        llm = ChatOpenAI(
+            model=chat_model, api_key=openai_api_key, temperature=llm_temperature
+        )
         chain = _PROMPT | llm
 
         return RAGService(retriever=retriever, chain=chain, vector_store=vector_store)
@@ -98,4 +110,6 @@ class RAGService:
             )
 
         response = _invoke()
-        return AskResult(answer=response.content, citations=list(dict.fromkeys(citations)))
+        return AskResult(
+            answer=response.content, citations=list(dict.fromkeys(citations))
+        )

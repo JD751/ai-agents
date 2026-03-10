@@ -11,7 +11,9 @@ from app.services.ingest_service import IngestResult
 @pytest.fixture
 def client():
     mock_service = MagicMock()
-    mock_service.ingest_async = AsyncMock(return_value=IngestResult(chunks_added=42, files_processed=3))
+    mock_service.ingest_async = AsyncMock(
+        return_value=IngestResult(chunks_added=42, files_processed=3)
+    )
     app.dependency_overrides[get_ingest_service] = lambda: mock_service
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -31,7 +33,9 @@ def test_ingest_returns_chunk_and_file_counts(client):
 
 def test_ingest_zero_chunks_when_no_documents(client):
     mock_service = app.dependency_overrides[get_ingest_service]()
-    mock_service.ingest_async = AsyncMock(return_value=IngestResult(chunks_added=0, files_processed=0))
+    mock_service.ingest_async = AsyncMock(
+        return_value=IngestResult(chunks_added=0, files_processed=0)
+    )
     resp = client.post("/api/v1/ingest")
     data = resp.json()
     assert data["chunks_added"] == 0

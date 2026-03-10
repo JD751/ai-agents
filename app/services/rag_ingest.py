@@ -57,7 +57,9 @@ def load_documents(
                 continue
 
             docs.extend(loaded)
-            logger.info("Loaded document", extra={"file": str(file), "pages": len(loaded)})
+            logger.info(
+                "Loaded document", extra={"file": str(file), "pages": len(loaded)}
+            )
 
         except (KeyboardInterrupt, SystemExit):
             raise

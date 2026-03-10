@@ -13,4 +13,3 @@ def test_root():
     assert body["name"] == "bayer-ai"
     assert body["status"] == "ok"
     assert body["version"] == "v1"
-

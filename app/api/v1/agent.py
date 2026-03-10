@@ -21,17 +21,23 @@ async def run_agent(
     db: AsyncSession = Depends(get_db),
 ) -> AgentResponse:
     start = time.monotonic()
-    result = await agent.run(query=body.query, thread_id=body.thread_id, request_id=request.state.request_id)
+    result = await agent.run(
+        query=body.query, thread_id=body.thread_id, request_id=request.state.request_id
+    )
     latency_ms = (time.monotonic() - start) * 1000
 
-    db.add(QueryLog(
-        request_id=request.state.request_id,
-        endpoint="/agent",
-        input_text=body.query,
-        response_text=result.answer,
-        citation_count=len(result.citations),
-        latency_ms=round(latency_ms, 2),
-    ))
+    db.add(
+        QueryLog(
+            request_id=request.state.request_id,
+            endpoint="/agent",
+            input_text=body.query,
+            response_text=result.answer,
+            citation_count=len(result.citations),
+            latency_ms=round(latency_ms, 2),
+        )
+    )
     await db.commit()
 
-    return AgentResponse(answer=result.answer, tool_calls=result.tool_calls, citations=result.citations)
+    return AgentResponse(
+        answer=result.answer, tool_calls=result.tool_calls, citations=result.citations
+    )

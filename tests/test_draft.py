@@ -1,9 +1,9 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_draft_service
+from app.api.deps import get_db, get_draft_service
 from app.main import app
 from app.services.draft_service import DraftResult
 
@@ -20,7 +20,13 @@ def client():
         ),
         citations=["Angeliq_CMI.pdf"],
     )
+
+    mock_db = MagicMock()
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+
     app.dependency_overrides[get_draft_service] = lambda: mock_service
+    app.dependency_overrides[get_db] = lambda: mock_db
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -39,7 +45,9 @@ def test_draft_returns_non_empty_content(client):
 
 
 def test_draft_calls_service_with_brief(client):
+    from unittest.mock import ANY
+
     brief = "allergy relief for seasonal sufferers"
     client.post("/api/v1/draft", json={"brief": brief})
     mock_service = app.dependency_overrides[get_draft_service]()
-    mock_service.draft.assert_called_once_with(brief)
+    mock_service.draft.assert_called_once_with(brief, request_id=ANY)

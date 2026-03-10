@@ -24,20 +24,24 @@ async def review(
 ):
     rid = request.state.request_id
     start = time.monotonic()
-    result = await asyncio.to_thread(lambda: review_service.review(payload.text, request_id=rid))
+    result = await asyncio.to_thread(
+        lambda: review_service.review(payload.text, request_id=rid)
+    )
     latency_ms = (time.monotonic() - start) * 1000
 
     validate_review_response(result.notes)
 
-    db.add(QueryLog(
-        request_id=rid,
-        endpoint="/review",
-        input_text=payload.text,
-        response_text="\n".join(result.notes),
-        citation_count=0,
-        is_compliant=result.is_compliant,
-        latency_ms=round(latency_ms, 2),
-    ))
+    db.add(
+        QueryLog(
+            request_id=rid,
+            endpoint="/review",
+            input_text=payload.text,
+            response_text="\n".join(result.notes),
+            citation_count=0,
+            is_compliant=result.is_compliant,
+            latency_ms=round(latency_ms, 2),
+        )
+    )
     await db.commit()
 
     return ReviewResponse(is_compliant=result.is_compliant, notes=result.notes)

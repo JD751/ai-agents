@@ -32,7 +32,11 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
             request_id = getattr(request.state, "request_id", "unknown")
             logger.warning(
                 "Request timed out",
-                extra={"request_id": request_id, "path": request.url.path, "timeout": self.timeout},
+                extra={
+                    "request_id": request_id,
+                    "path": request.url.path,
+                    "timeout": self.timeout,
+                },
             )
             return JSONResponse(
                 status_code=504,
