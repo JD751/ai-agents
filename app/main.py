@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGCHAIN_API_KEY"] = settings.langchain_api_key
         os.environ["LANGCHAIN_PROJECT"] = settings.langchain_project
-        os.environ["LANGSMITH_ENDPOINT"] = settings.langsmith_endpoint
+        os.environ["LANGCHAIN_ENDPOINT"] = settings.langchain_endpoint
         logger.info(
             "LangSmith tracing enabled", extra={"project": settings.langchain_project}
         )

@@ -95,16 +95,21 @@ Why: Container Apps need to pull images from ACR and read secrets from Key Vault
 # Create a user-assigned managed identity
 az identity create --name bayer-ai-identity --resource-group bayer-ai-rg
 
+# Capture identity IDs for use in all subsequent steps
+IDENTITY_ID=$(az identity show --name bayer-ai-identity --resource-group bayer-ai-rg --query id -o tsv)
+IDENTITY_CLIENT_ID=$(az identity show --name bayer-ai-identity --resource-group bayer-ai-rg --query clientId -o tsv)
+IDENTITY_PRINCIPAL_ID=$(az identity show --name bayer-ai-identity --resource-group bayer-ai-rg --query principalId -o tsv)
+
 # Grant ACR pull access
 az role assignment create \
-  --assignee <identity-client-id> \
+  --assignee $IDENTITY_PRINCIPAL_ID \
   --role AcrPull \
-  --scope /subscriptions/<sub-id>/resourceGroups/bayer-ai-rg/providers/Microsoft.ContainerRegistry/registries/bayerairegistry
+  --scope $(az acr show --name bayerairegistry --query id -o tsv)
 
 # Grant Key Vault secret read access via RBAC (vault uses enableRbacAuthorization — set-policy does not work)
 az role assignment create \
   --role "Key Vault Secrets User" \
-  --assignee <identity-principal-id> \
+  --assignee $IDENTITY_PRINCIPAL_ID \
   --scope $(az keyvault show --name bayer-ai-kv --query id -o tsv)
 Step 7 — Push Docker Image to ACR
 Why: ACR needs the image before Container Apps can deploy it. This is the manual first push — after this, CI/CD takes over.
@@ -123,18 +128,18 @@ az containerapp create \
   --environment bayer-ai-env \
   --image bayerairegistry.azurecr.io/bayer-ai:latest \
   --registry-server bayerairegistry.azurecr.io \
-  --user-assigned <identity-resource-id> \
+  --user-assigned $IDENTITY_ID \
   --target-port 8000 \
   --ingress external \
   --min-replicas 0 \
   --max-replicas 3 \
-  --secrets "openai-key=keyvaultref:https://bayer-ai-kv.vault.azure.net/secrets/OPENAI-API-KEY,identityref:<identity-resource-id>" \
-           "langchain-key=keyvaultref:https://bayer-ai-kv.vault.azure.net/secrets/LANGCHAIN-API-KEY,identityref:<identity-resource-id>" \
+  --secrets "openai-key=keyvaultref:https://bayer-ai-kv.vault.azure.net/secrets/OPENAI-API-KEY,identityref:$IDENTITY_ID" \
+           "langchain-key=keyvaultref:https://bayer-ai-kv.vault.azure.net/secrets/LANGCHAIN-API-KEY,identityref:$IDENTITY_ID" \
   --env-vars "OPENAI_API_KEY=secretref:openai-key" \
              "LANGCHAIN_API_KEY=secretref:langchain-key" \
              "LANGCHAIN_TRACING_V2=true" \
              "LANGCHAIN_PROJECT=bayer-ai" \
-             "LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com" \
+             "LANGCHAIN_ENDPOINT=https://eu.api.smith.langchain.com" \
              "CHROMA_PERSIST_DIR=/chroma_db" \
              "APP_ENV=production"
 min-replicas 0 = scale to zero when idle (cost saving). max-replicas 3 = auto-scale under load.
@@ -162,7 +167,7 @@ az containerapp update \
     "LANGCHAIN_API_KEY=secretref:langchain-key" \
     "LANGCHAIN_TRACING_V2=true" \
     "LANGCHAIN_PROJECT=bayer-ai" \
-    "LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com"
+    "LANGCHAIN_ENDPOINT=https://eu.api.smith.langchain.com"
 
 # 4. Verify all env vars are set
 az containerapp show \

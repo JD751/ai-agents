@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     langchain_tracing_v2: bool = False
     langchain_api_key: str = ""
     langchain_project: str = "bayer-ai"
-    langsmith_endpoint: str = "https://eu.api.smith.langchain.com"
+    langchain_endpoint: str = "https://eu.api.smith.langchain.com"
 
     @field_validator("langchain_tracing_v2", mode="before")
     @classmethod
