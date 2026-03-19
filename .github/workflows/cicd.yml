@@ -132,4 +132,4 @@ jobs:
             --query properties.configuration.ingress.fqdn -o tsv)
           echo "App URL: https://${FQDN}"
           sleep 15
-          curl --fail --silent --show-error "https://${FQDN}/health"
+          curl --fail --silent --show-error "https://${FQDN}/api/v1/health"
