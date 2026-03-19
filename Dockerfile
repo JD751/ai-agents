@@ -45,8 +45,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
 COPY documents/ ./documents/
 
-# Transfer ownership of all app files to the non-root user.
-RUN chown -R appuser:appgroup /app
+# Create chroma persistence directory and transfer ownership to non-root user.
+RUN mkdir -p /chroma_db && \
+    chown -R appuser:appgroup /app /chroma_db
 
 # Switch to non-root user for all subsequent commands and at runtime.
 USER appuser

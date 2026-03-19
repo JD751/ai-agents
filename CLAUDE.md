@@ -1,7 +1,7 @@
-
+ 
 Before each edit provide a simple, brief, yet comprehensive explanation of why you are doing that step
 
-
+Follow the 12-factor app principles 
 
 # Product Name
 
@@ -231,7 +231,6 @@ Deliverable:
 Working CI pipeline.
 
 ---
-
 
 
 
