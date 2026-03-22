@@ -15,8 +15,7 @@ from app.core.middleware import (
     global_exception_handler,
 )
 from app.core.limiter import limiter
-from app.db.base import Base, get_engine, init_db
-from app.db import models  # noqa: F401 — registers ORM models with Base.metadata
+from app.db.base import init_db
 
 
 @asynccontextmanager
@@ -26,8 +25,6 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     init_db(settings.database_url)
-    async with get_engine().begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     logger.info("Database initialised", extra={"event": "db_ready"})
 
     if settings.langchain_tracing_v2:
@@ -81,17 +78,19 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Review service initialised", extra={"event": "review_ready"})
 
-    app.state.agent = BayerAgent.create(
+    app.state.agent = await BayerAgent.create(
         rag_service=app.state.rag_service,
         draft_service=app.state.draft_service,
         review_service=app.state.review_service,
         openai_api_key=settings.openai_api_key,
         chat_model=settings.chat_model,
+        database_url=settings.database_url,
     )
     logger.info("Bayer agent initialised", extra={"event": "agent_ready"})
 
     yield
 
+    await app.state.agent.close()
     logger.info("Application shutdown", extra={"event": "shutdown"})
 
 

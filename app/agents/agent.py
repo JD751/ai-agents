@@ -11,8 +11,10 @@ from dataclasses import dataclass
 
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langchain.agents import create_agent
+from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
 
 from app.core.retry import async_llm_retry
 
@@ -42,18 +44,19 @@ class AgentResult:
 
 
 class BayerAgent:
-    def __init__(self, graph, memory: InMemorySaver):
+    def __init__(self, graph, pool: AsyncConnectionPool):
         self._graph = graph
-        self._memory = memory
+        self._pool = pool
 
     @classmethod
-    def create(
+    async def create(
         cls,
         rag_service: RAGService,
         draft_service: DraftService,
         review_service: ReviewService,
         openai_api_key: str,
         chat_model: str,
+        database_url: str,
     ) -> "BayerAgent":
         def rag_tool(question: str) -> str:
             """Answer factual questions about Bayer products or policies using the knowledge base."""
@@ -77,17 +80,32 @@ class BayerAgent:
 
         tools = [rag_tool, draft_tool, review_tool]
         llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=0)
-        memory = InMemorySaver()
+
+        # psycopg DSN (strip SQLAlchemy driver prefix used by asyncpg)
+        pg_dsn = database_url.replace("postgresql+asyncpg://", "postgresql://")
+        pool = AsyncConnectionPool(
+            conninfo=pg_dsn,
+            open=False,
+            kwargs={"autocommit": True, "row_factory": dict_row},
+        )
+        await pool.open()
+
+        checkpointer = AsyncPostgresSaver(pool)
+        await checkpointer.setup()  # creates langgraph checkpoint tables if absent
 
         graph = create_agent(
             llm,
             tools=tools,
             system_prompt=_SYSTEM_PROMPT,
-            checkpointer=memory,
+            checkpointer=checkpointer,
         )
 
-        logger.info("Bayer LangGraph agent initialised")
-        return cls(graph=graph, memory=memory)
+        logger.info("Bayer LangGraph agent initialised with Postgres checkpointer")
+        return cls(graph=graph, pool=pool)
+
+    async def close(self) -> None:
+        """Close the Postgres connection pool on application shutdown."""
+        await self._pool.close()
 
     async def run(
         self, query: str, thread_id: str = "default", request_id: str = "unknown"

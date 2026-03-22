@@ -3,7 +3,20 @@
     "workbench.editor.enablePreview": false,
     "workbench.editor.enablePreviewFromQuickOpen": false,
     "workbench.editor.closeOnFileDelete": true,
-    "python.defaultInterpreterPath" : "/home/agent_x/projects/bayer-ai/.venv/bin/python"
+    "python.defaultInterpreterPath": "/home/agent_x/projects/bayer-ai/.venv/bin/python",
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "bayer-ai local",
+            "database": "bayerai",
+            "username": "bayeruser",
+            "password": "bayerpass"
+        }
+    ]
 
 }
 

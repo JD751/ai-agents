@@ -1,5 +1,6 @@
 # Secrets and env (keep .env.example tracked)
 .env
+.env.example
 .env.local
 .env.*.local
 
