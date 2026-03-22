@@ -17,6 +17,7 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://user:pass@localhost:5432/testdb
       CHROMA_PERSIST_DIR: chroma_db
       LANGCHAIN_TRACING_V2: "false"
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
 
     steps:
       - uses: actions/checkout@v4

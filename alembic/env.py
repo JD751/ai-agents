@@ -17,9 +17,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Load our ORM models and Base so autogenerate can diff against the schema
-from app.db.base import Base
-from app.db import models  # noqa: F401 — registers all ORM models with Base.metadata
-from app.config.settings import Settings
+from app.db.base import Base  # noqa: E402
+from app.db import models  # noqa: F401 E402 — registers all ORM models with Base.metadata
+from app.config.settings import Settings  # noqa: E402
 
 target_metadata = Base.metadata
 
