@@ -144,6 +144,18 @@ jobs:
             --resource-group bayer-ai-rg \
             --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
 
+      - name: Deploy Azure Function (ingest pipeline)
+        # Deploys functions/ingest/ to the consumption plan Function App.
+        # Oryx builds the Python environment on the server side using requirements.txt —
+        # no local pip install needed. Runs after the Container App update so ChromaDB
+        # is already running before the Function goes live.
+        uses: Azure/functions-action@v1
+        with:
+          app-name: bayer-ai-ingest-fn
+          package: functions/ingest
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
+
       - name: Verify deployment health
         # Wait for the new revision to become active, then hit the health
         # endpoint. The step fails the workflow if the app is not responding,
