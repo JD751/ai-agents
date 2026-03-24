@@ -8,7 +8,6 @@ from app.agents.agent import BayerAgent
 from app.config.settings import Settings
 from app.db.base import get_session_factory
 from app.services.draft_service import DraftService
-from app.services.ingest_service import IngestService
 from app.services.rag_service import RAGService
 from app.services.review_service import ReviewService
 
@@ -25,10 +24,6 @@ def get_rag_service(request: Request) -> RAGService:
 
 def get_draft_service(request: Request) -> DraftService:
     return request.app.state.draft_service
-
-
-def get_ingest_service(request: Request) -> IngestService:
-    return request.app.state.ingest_service
 
 
 def get_review_service(request: Request) -> ReviewService:

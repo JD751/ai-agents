@@ -40,10 +40,9 @@ WORKDIR /app
 COPY --from=builder /build/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source and sample documents.
-# chroma_db/ is intentionally excluded — it will be mounted as a volume.
+# Copy application source.
+# chroma_db/ and documents/ are intentionally excluded — documents live in Azure Blob Storage.
 COPY app/ ./app/
-COPY documents/ ./documents/
 
 # Create chroma persistence directory and transfer ownership to non-root user.
 RUN mkdir -p /chroma_db && \

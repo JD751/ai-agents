@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "bayer-ai"
-    documents_dir: str = "documents"
     api_v1_prefix: str = "/api/v1"
     log_level: str = "INFO"
     openai_api_key: str = ""
@@ -27,7 +26,6 @@ class Settings(BaseSettings):
     rate_limit_ask: str = "30/minute"
     rate_limit_draft: str = "20/minute"
     rate_limit_review: str = "20/minute"
-    rate_limit_ingest: str = "5/minute"
 
     # PostgreSQL
     database_url: str = (
