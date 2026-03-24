@@ -112,6 +112,28 @@ jobs:
           docker build -t bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }} .
           docker push bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
 
+      - name: Run database migrations
+        # Runs alembic upgrade head in an isolated Container App Job using the
+        # exact image being deployed — migration code and app code are always in sync.
+        # The job must succeed before the container app update runs. If migration
+        # fails the workflow exits here and the running app is left untouched.
+        run: |
+          az containerapp job start \
+            --name bayer-ai-migrate \
+            --resource-group bayer-ai-rg \
+            --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
+
+          for i in $(seq 1 30); do
+            STATUS=$(az containerapp job execution list \
+              --name bayer-ai-migrate \
+              --resource-group bayer-ai-rg \
+              --query "[-1].properties.status" -o tsv)
+            echo "Migration status: $STATUS"
+            [ "$STATUS" = "Succeeded" ] && break
+            [ "$STATUS" = "Failed"    ] && exit 1
+            sleep 10
+          done
+
       - name: Deploy to Container Apps
         # Updating the image reference triggers a rolling restart with zero
         # downtime. Container Apps keeps the previous revision alive until
@@ -121,6 +143,18 @@ jobs:
             --name bayer-ai-app \
             --resource-group bayer-ai-rg \
             --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
+
+      - name: Deploy Azure Function (ingest pipeline)
+        # Deploys functions/ingest/ to the consumption plan Function App.
+        # Oryx builds the Python environment on the server side using requirements.txt —
+        # no local pip install needed. Runs after the Container App update so ChromaDB
+        # is already running before the Function goes live.
+        uses: Azure/functions-action@v1
+        with:
+          app-name: bayer-ai-ingest-fn
+          package: functions/ingest
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
 
       - name: Verify deployment health
         # Wait for the new revision to become active, then hit the health

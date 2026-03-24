@@ -1,0 +1,8 @@
+azure-functions
+azure-identity
+langchain-core>=1.2
+langchain-openai>=1.1
+langchain-text-splitters>=1.1
+langchain-chroma>=0.2
+chromadb>=0.6
+pypdf>=5

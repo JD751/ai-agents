@@ -41,7 +41,6 @@ async def lifespan(app: FastAPI):
     from app.agents.agent import BayerAgent
     from app.services.rag_service import RAGService
     from app.services.draft_service import DraftService
-    from app.services.ingest_service import IngestService
     from app.services.review_service import ReviewService
 
     app.state.rag_service = await RAGService.create(
@@ -62,12 +61,6 @@ async def lifespan(app: FastAPI):
         llm_temperature=settings.llm_temperature,
     )
     logger.info("Draft service initialised", extra={"event": "draft_ready"})
-
-    app.state.ingest_service = IngestService(
-        vector_store=app.state.rag_service.vector_store,
-        settings=settings,
-    )
-    logger.info("Ingest service initialised", extra={"event": "ingest_ready"})
 
     app.state.review_service = await ReviewService.create(
         vector_store=app.state.rag_service.vector_store,
