@@ -5,6 +5,9 @@
 chroma_db/
 postgres_data/
 
+# Documents are served from Azure Blob Storage in production — not baked into the image
+documents/
+
 # Python cache — rebuilt inside the container
 __pycache__/
 **/__pycache__/
@@ -29,6 +32,7 @@ CLAUDE.md
 PRD.md
 project_plan.md
 project_overview.md
+
 
 # Test files — not part of the production image
 tests/
