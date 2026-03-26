@@ -153,17 +153,16 @@ jobs:
             --resource-group bayer-ai-rg \
             --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
 
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4
+
       - name: Deploy Azure Function (ingest pipeline)
-        # Deploys functions/ingest/ to the consumption plan Function App.
-        # Oryx builds the Python environment on the server side using requirements.txt —
-        # no local pip install needed. Runs after the Container App update so ChromaDB
-        # is already running before the Function goes live.
-        uses: Azure/functions-action@v1
-        with:
-          app-name: bayer-ai-ingest-fn
-          package: functions/ingest
-          scm-do-build-during-deployment: true
-          enable-oryx-build: true
+        # Uses func core tools for reliable deployment to Linux consumption plan.
+        # Azure/functions-action sets WEBSITE_RUN_FROM_PACKAGE which conflicts
+        # with SCM-based deployments on Linux — func publish avoids this entirely.
+        run: |
+          cd functions/ingest
+          func azure functionapp publish bayer-ai-ingest-fn --python
 
       - name: Verify deployment health
         # Wait for the new revision to become active, then hit the health
