@@ -1,0 +1,80 @@
+flowchart TB
+    subgraph Internet
+        User(["👤 User / Admin"])
+    end
+
+    subgraph CI_CD["CI/CD (GitHub Actions)"]
+        GHA["GitHub Actions"]
+    end
+
+    subgraph ACR["bayerairegistry\n(Container Registry)"]
+        Image["Docker Image"]
+    end
+
+    subgraph ACA["bayer-ai-env (Container Apps Environment)"]
+        App["bayer-ai-app\n(FastAPI /ask)"]
+        ChromaDB["chromadb\n(Vector DB)"]
+        MigrateJob["bayer-ai-migrate\n(Container App Job)\nalembic upgrade head"]
+    end
+
+    subgraph Storage["Azure Storage"]
+        DocStorage["bayeraidocsstorage\n(Blob Storage)\nbayer-ai-documents/"]
+        ChromaStorage["bayeraichromastorage\n(Azure Files)\n/chroma/data mount"]
+    end
+
+    subgraph FunctionPlan["EastUSLinuxDynamicPlan"]
+        IngestFn["bayer-ai-ingest-fn\n(Function App)\nBlob Trigger"]
+    end
+
+    subgraph Data["Data Layer"]
+        PG["bayer-ai-db\n(PostgreSQL)\nSessions + Query Logs"]
+    end
+
+    subgraph Secrets["bayer-ai-kv (Key Vault)"]
+        KV["OPENAI_API_KEY\nDATABASE_URL\nCHROMA_AUTH_TOKEN"]
+    end
+
+    subgraph Observability["Observability"]
+        AppInsights["bayer-ai-ingest-fn\n(Application Insights)"]
+        LogWS["workspace-bayerairgtFf9\n(Log Analytics)"]
+        AlertGroup["Smart Detection\n(Action Group)"]
+    end
+
+    Identity["bayer-ai-identity\n(Managed Identity)"]
+
+    %% CI/CD Flow
+    GHA -->|"1. push image"| Image
+    GHA -->|"2. trigger migrate job"| MigrateJob
+    GHA -->|"3. deploy app"| App
+    GHA -->|"4. deploy function"| IngestFn
+
+    %% Migration
+    MigrateJob -->|"pulls image"| Image
+    MigrateJob -->|"alembic upgrade head"| PG
+
+    %% User query flow
+    User -->|"POST /ask"| App
+    App -->|"vector search"| ChromaDB
+    App -->|"read/write session history"| PG
+    App -->|"read secrets"| KV
+
+    %% ChromaDB persistence
+    ChromaDB <-->|"Azure Files volume mount"| ChromaStorage
+
+    %% Ingestion pipeline
+    User -->|"upload document"| DocStorage
+    DocStorage -->|"BlobCreated event"| IngestFn
+    IngestFn -->|"download blob"| DocStorage
+    IngestFn -->|"chunk → embed → upsert"| ChromaDB
+    IngestFn -->|"read secrets"| KV
+
+    %% Identity (passwordless auth)
+    Identity -.->|"assigned to"| App
+    Identity -.->|"assigned to"| IngestFn
+    Identity -.->|"grants access to"| KV
+    Identity -.->|"grants Blob Reader"| DocStorage
+
+    %% Observability
+    IngestFn -->|"telemetry"| AppInsights
+    AppInsights -->|"logs sink"| LogWS
+    AppInsights -->|"anomaly alerts"| AlertGroup

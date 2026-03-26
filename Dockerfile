@@ -43,10 +43,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source.
 # chroma_db/ and documents/ are intentionally excluded — documents live in Azure Blob Storage.
 COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
 
 # Create chroma persistence directory and transfer ownership to non-root user.
 RUN mkdir -p /chroma_db && \
-    chown -R appuser:appgroup /app /chroma_db
+    chown -R appuser:appgroup /app /chroma_db && \
+    chmod -R 755 /app/alembic
 
 # Switch to non-root user for all subsequent commands and at runtime.
 USER appuser
