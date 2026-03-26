@@ -125,15 +125,18 @@ jobs:
             --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }} \
             --command "alembic" "upgrade" "head"
 
-          az containerapp job start \
+          EXECUTION_NAME=$(az containerapp job start \
             --name bayer-ai-migrate \
-            --resource-group bayer-ai-rg
+            --resource-group bayer-ai-rg \
+            --query name -o tsv)
+          echo "Execution: $EXECUTION_NAME"
 
           for i in $(seq 1 30); do
-            STATUS=$(az containerapp job execution list \
+            STATUS=$(az containerapp job execution show \
               --name bayer-ai-migrate \
               --resource-group bayer-ai-rg \
-              --query "[-1].properties.status" -o tsv)
+              --job-execution-name "$EXECUTION_NAME" \
+              --query properties.status -o tsv)
             echo "Migration status: $STATUS"
             [ "$STATUS" = "Succeeded" ] && break
             [ "$STATUS" = "Failed"    ] && exit 1
