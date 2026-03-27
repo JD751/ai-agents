@@ -59,8 +59,12 @@ def _get_vector_store() -> Chroma:
     embedding_model = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
     openai_api_key = os.environ["OPENAI_API_KEY"]
 
+    host = chroma_host.removeprefix("https://").removeprefix("http://")
+    ssl = chroma_host.startswith("https://")
     client = chromadb.HttpClient(
-        host=chroma_host,
+        host=host,
+        port=443 if ssl else 8000,
+        ssl=ssl,
         headers={"Authorization": f"Bearer {chroma_token}"},
     )
     embeddings = OpenAIEmbeddings(model=embedding_model, api_key=openai_api_key)
