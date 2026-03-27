@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "chroma_db"
     chroma_host: str = ""  # set to "chroma" in Docker; empty = use PersistentClient
     chroma_port: int = 8000
+    chroma_auth_token: str = ""
 
     # Production hardening
     request_timeout_seconds: float = 30.0

@@ -43,8 +43,16 @@ def build_vector_store(settings: Settings, embeddings: OpenAIEmbeddings) -> Chro
     Falls back to PersistentClient for local development outside Docker.
     """
     if settings.chroma_host:
+        host = settings.chroma_host.removeprefix("https://").removeprefix("http://")
+        ssl = settings.chroma_host.startswith("https://")
+        headers = {}
+        if settings.chroma_auth_token:
+            headers["Authorization"] = f"Bearer {settings.chroma_auth_token}"
         client = chromadb.HttpClient(
-            host=settings.chroma_host, port=settings.chroma_port
+            host=host,
+            port=443 if ssl else settings.chroma_port,
+            ssl=ssl,
+            headers=headers,
         )
         logger.info(
             "Connected to Chroma via HTTP",
