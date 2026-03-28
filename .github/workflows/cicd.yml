@@ -151,7 +151,30 @@ jobs:
           az containerapp update \
             --name bayer-ai-app \
             --resource-group bayer-ai-rg \
-            --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }}
+            --image bayerairegistry.azurecr.io/bayer-ai:${{ github.sha }} \
+            --set-env-vars "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python"
+
+          # Get the revision that was just created and poll until it's Running.
+          # Without this, the health check below hits the OLD healthy revision and
+          # masks failures — new revisions can silently fail while CI reports green.
+          REVISION=$(az containerapp show \
+            --name bayer-ai-app \
+            --resource-group bayer-ai-rg \
+            --query properties.latestRevisionName -o tsv)
+          echo "Waiting for revision: $REVISION"
+
+          for i in $(seq 1 36); do
+            STATE=$(az containerapp revision show \
+              --name bayer-ai-app \
+              --resource-group bayer-ai-rg \
+              --revision "$REVISION" \
+              --query properties.runningState -o tsv)
+            echo "  [$i/36] $STATE"
+            [ "$STATE" = "Running" ] && break
+            [ "$STATE" = "Failed"  ] && { echo "Revision failed to start — check container logs"; exit 1; }
+            sleep 10
+          done
+          [ "$STATE" != "Running" ] && { echo "Revision did not become healthy within 6 minutes"; exit 1; }
 
       - name: Install Azure Functions Core Tools
         run: npm install -g azure-functions-core-tools@4
@@ -165,14 +188,12 @@ jobs:
           func azure functionapp publish bayer-ai-ingest-fn --python
 
       - name: Verify deployment health
-        # Wait for the new revision to become active, then hit the health
-        # endpoint. The step fails the workflow if the app is not responding,
-        # giving a clear signal before the run is marked green.
+        # Revision is already confirmed Running above — just hit the health
+        # endpoint to verify traffic is being served correctly.
         run: |
           FQDN=$(az containerapp show \
             --name bayer-ai-app \
             --resource-group bayer-ai-rg \
             --query properties.configuration.ingress.fqdn -o tsv)
           echo "App URL: https://${FQDN}"
-          sleep 15
           curl --fail --silent --show-error "https://${FQDN}/api/v1/health"
