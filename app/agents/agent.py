@@ -81,8 +81,13 @@ class BayerAgent:
         tools = [rag_tool, draft_tool, review_tool]
         llm = ChatOpenAI(model=chat_model, api_key=openai_api_key, temperature=0)
 
-        # psycopg DSN (strip SQLAlchemy driver prefix used by asyncpg)
-        pg_dsn = database_url.replace("postgresql+asyncpg://", "postgresql://")
+        # psycopg DSN: strip SQLAlchemy driver prefix and translate asyncpg ssl param.
+        # asyncpg uses ?ssl=require; psycopg uses ?sslmode=require.
+        pg_dsn = (
+            database_url
+            .replace("postgresql+asyncpg://", "postgresql://")
+            .replace("ssl=require", "sslmode=require")
+        )
         pool = AsyncConnectionPool(
             conninfo=pg_dsn,
             open=False,
